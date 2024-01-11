@@ -1,9 +1,7 @@
-FROM golang:1.10
-ARG DEP_VERSION=v0.4.1
-RUN curl -fsSL -o /usr/local/bin/dep https://github.com/golang/dep/releases/download/${DEP_VERSION}/dep-linux-amd64 && chmod +x /usr/local/bin/dep
+FROM golang:1.21
 WORKDIR /go/src/github.com/nemosupremo/vault-statsd/
 COPY ./ ./
-RUN mkdir -p $GOPATH/pkg && dep ensure -v -vendor-only && \
+RUN mkdir -p $GOPATH/pkg && \
 	CGO_ENABLED=0 go build -ldflags "-X main.BuildTime=`date -u '+%Y-%m-%d_%I:%M:%S%p'` -X main.Version=`git -C ./ describe --abbrev=0 --tags HEAD`" -a -installsuffix cgo -o dist/vault-statsd ./
 
 FROM scratch

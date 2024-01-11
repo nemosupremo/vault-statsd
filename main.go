@@ -11,7 +11,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"gopkg.in/alexcesaro/statsd.v2"
+	"github.com/joeycumines/statsd"
 )
 
 func init() {
@@ -104,8 +104,14 @@ func main() {
 
 	logrus.Infof("Reporting status of vault servers: %+v", vaultHosts)
 
+	conn, err := statsd.NewUDPConn("udp", viper.GetString("statsd-addr"), time.Second*30)
+	if err != nil {
+		logrus.Fatalf("Failed to connect to statsd: %w", err)
+	}
 	options := []statsd.Option{
-		statsd.Address(viper.GetString("statsd-addr")),
+		statsd.WriteCloser(conn),
+		statsd.TrimTrailingNewline(true), 
+		statsd.UDPCheck(true),
 		statsd.Prefix(viper.GetString("prefix")),
 		statsd.ErrorHandler(func(err error) {
 			logrus.Warnf("Statsd Error: %v", err)
